@@ -1,0 +1,109 @@
+***********QUESTION 1**********************************
+import delimited "/Users/nebraskagrayson/Downloads/Koop-Tobias.csv", numericcols(_all) clear
+**Data Cleaning*********
+**Extract 1st Obs of the 1st 15 Individuals**
+egen npersonid = anyvalue(personid), values(1/15)
+
+bysort npersonid (npersonid) : gen first = _n == 1
+
+gen datalist = 1 if npersonid <= 15 & first == 1
+
+keep if datalist == 1
+
+**Create variable lists for regressions**
+
+global ylist logwage 
+global x1list educ potexper ability 
+global x2list mothered fathered siblings 
+
+**Model***********
+**part a**
+regress $ylist $x1list 
+regress $ylist $x1list, noconstant 
+
+**part b**
+regress $ylist $x1list $x2list 
+regress $ylist $x1list $x2list, noconstant 
+
+**part c**
+
+ *R^2 for Y on X1 & X2 (.51613413)*
+display 1 - [.45226629] / [.934693521] 
+ *R^2 for Y on X1 & X2, omit constant (.99299094)*
+display 1 - [.452417043] / [64.5475011] 
+
+**part d**
+ *AdjR^2 for Y on X1 & X2*
+display 1 - [(.45226629)/(15-7)] / [(.934693521)/(15-1)] 
+ *AdjR^2 for Y on X1 & X2, omit constant*
+display 1 - [(.452417043)/(15-6)] / [(64.5475011)/(15-1)] 
+
+**part e**
+*MR1*
+
+*MR2*
+
+*MR5*
+corr $x1list 
+corr $x1list $x2list 
+
+*MR6*
+mean logwage
+kdensity logwage
+
+***********QUESTION 2**********************************
+**Data Cleaning*********
+import delimited "/Users/nebraskagrayson/Downloads/TableF2-2.csv", numericcols(_all) clear
+
+gen pcconsump = gasexp/[gasp*pop]
+
+**part a**
+regress pcconsump income gasp pnc puc ppt pd pn ps year
+
+**part b**
+regress gasexp pnc puc 
+test _b[pnc] == _b[puc]
+**fail to reject the H0, we don't have enough information to state that pnc and puc should be not be treated equally**
+
+**part c**
+regress pcconsump income gasp pnc puc ppt pd pn ps year
+margins, eyex(gasp) at(year == 2004)
+margins, eyex(income) at(year == 2004) 
+margins, eyex(ppt) at(year == 2004)
+
+**part d**
+gen lnpcconsump = log(pcconsump)
+gen lnincome = log(income) 
+gen lngasp = log(gasp)
+gen lnpnc = log(pnc)
+gen lnpuc = log(puc)
+gen lnppt = log(ppt)
+gen lnpd = log(pd)
+gen lnpn = log(pn)
+gen lnps = log(ps)
+
+regress lnpcconsump lnincome lngasp lnpnc lnpuc lnppt lnpd lnpn lnps year
+
+**part e**
+corr gasp pnc puc ppt pd pn ps 
+corr lngasp lnpnc lnpuc lnppt lnpd lnpn lnps
+**part f**
+gen normgasp = gasp*(100/123.901)
+gen normpnc = pnc*(100/133.89999)
+gen normpuc = puc*(100/133.3)
+gen normppt = ppt*(100/209.10001)
+gen normpd = pd*(100/114.8)
+gen normpn = pn*(100/172.2)
+gen normps = ps*(100/222.8)
+gen normlngasp = lngasp*(100/4.8194828)
+gen normlnpnc = lnpnc*(100/4.8970933)
+gen normlnpuc = lnpuc*(100/4.8926024)
+gen normlnppt = lnppt*(100/5.3428125)
+gen normlnpd = lnpd*(100/4.7431917)
+gen normlnpn = lnpn*(100/5.1486564)
+gen normlnps = lnps*(100/5.4062743)
+
+regress pcconsump income normgasp normpnc normpuc normppt normpd normpn normps year
+regress lnpcconsump lnincome normlngasp normlnpnc normlnpuc normlnppt normlnpd normlnpn normlnps year
+
+
